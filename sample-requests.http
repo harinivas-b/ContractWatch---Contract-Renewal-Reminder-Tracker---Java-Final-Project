@@ -1,0 +1,76 @@
+### Create vendor
+POST http://localhost:8080/api/vendors
+Content-Type: application/json
+
+{
+  "name": "ABC Services",
+  "contactEmail": "vendor@example.com",
+  "contactPhone": "+91 9876543210",
+  "notes": "Primary maintenance vendor"
+}
+
+### List vendors
+GET http://localhost:8080/api/vendors
+
+### Create contract
+POST http://localhost:8080/api/contracts
+Content-Type: application/json
+
+{
+  "vendorId": 1,
+  "serviceName": "Annual equipment maintenance",
+  "contractStartDate": "2026-01-01",
+  "endDate": "2026-12-31",
+  "renewalNoticePeriodDays": 60,
+  "contactEmail": "vendor@example.com",
+  "status": "ACTIVE",
+  "notes": "Review pricing before renewal"
+}
+
+### List contracts
+GET http://localhost:8080/api/contracts
+
+### Contracts expiring in next 30 days
+GET http://localhost:8080/api/contracts/expiring?days=30
+
+### Contracts currently in renewal review
+GET http://localhost:8080/api/contracts/renewal-review
+
+### Dashboard
+GET http://localhost:8080/api/dashboard
+
+### Renewal decision - renewed
+POST http://localhost:8080/api/contracts/1/renewal-decision
+Content-Type: application/json
+
+{
+  "decision": "RENEWED",
+  "newEndDate": "2027-12-31",
+  "notes": "Renewed after annual review"
+}
+
+### Renewal decision - terminated
+POST http://localhost:8080/api/contracts/1/renewal-decision
+Content-Type: application/json
+
+{
+  "decision": "TERMINATED",
+  "newEndDate": null,
+  "notes": "Service no longer required"
+}
+
+### Renewal decision history
+GET http://localhost:8080/api/contracts/1/renewal-decisions
+
+### Add document reference
+POST http://localhost:8080/api/contracts/1/documents
+Content-Type: application/json
+
+{
+  "title": "Signed Agreement",
+  "referenceUrl": "https://example.com/contracts/agreement.pdf",
+  "description": "Signed contract reference"
+}
+
+### List document references
+GET http://localhost:8080/api/contracts/1/documents

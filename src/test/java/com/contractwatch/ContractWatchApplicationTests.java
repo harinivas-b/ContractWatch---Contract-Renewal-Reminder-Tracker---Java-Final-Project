@@ -1,0 +1,9 @@
+package com.contractwatch;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class ContractWatchApplicationTests {
+    @Test void contextLoads() {}
+}
