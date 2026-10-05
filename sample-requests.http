@@ -1,0 +1,35 @@
+### Create vendor
+POST http://localhost:8080/api/vendors
+Content-Type: application/json
+
+{
+  "name": "ABC Services",
+  "contactEmail": "vendor@example.com",
+  "contactPhone": "+91 9876543210",
+  "notes": "Primary service vendor"
+}
+
+### Get vendors
+GET http://localhost:8080/api/vendors
+
+### Create contract
+POST http://localhost:8080/api/contracts
+Content-Type: application/json
+
+{
+  "vendorId": 1,
+  "serviceName": "Annual equipment maintenance",
+  "contractStartDate": "2026-01-01",
+  "endDate": "2026-12-31",
+  "renewalNoticePeriodDays": 30,
+  "renewalReviewFlag": false,
+  "contactEmail": "vendor@example.com",
+  "status": "ACTIVE",
+  "notes": "Review before renewal"
+}
+
+### Get contracts
+GET http://localhost:8080/api/contracts
+
+### Dashboard
+GET http://localhost:8080/api/dashboard

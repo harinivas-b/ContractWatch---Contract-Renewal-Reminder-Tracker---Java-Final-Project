@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Watch</title>
+
+    <style>
+        :root {
+            font-family: Arial, sans-serif;
+            color: #172033;
+            background: #f4f7fb;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        header {
+            background: #152b4b;
+            color: white;
+            padding: 22px 5vw;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 18px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .card,
+        form,
+        .table-wrap,
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 2px 12px #182b4b12;
+            margin-bottom: 18px;
+        }
+
+        .metric {
+            font-size: 30px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: bold;
+            display: block;
+        }
+
+        input,
+        select,
+        textarea {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccd5e2;
+            border-radius: 7px;
+        }
+
+        textarea {
+            min-height: 70px;
+        }
+
+        button {
+            background: #1769aa;
+            color: white;
+            border: 0;
+            border-radius: 7px;
+            padding: 10px 14px;
+            cursor: pointer;
+            margin: 4px;
+        }
+
+        button.secondary {
+            background: #64748b;
+        }
+
+        button.danger {
+            background: #b42318;
+        }
+
+        button.warning {
+            background: #a15c00;
+        }
+
+        .wide {
+            grid-column: 1 / -1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 11px;
+            border-bottom: 1px solid #e5eaf1;
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        th {
+            background: #edf3f9;
+        }
+
+        .table-wrap {
+            overflow: auto;
+        }
+
+        .hint {
+            color: #5d6b80;
+            font-size: 13px;
+        }
+
+        .notice {
+            padding: 10px;
+            background: #fff6d8;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .success {
+            color: #137333;
+            font-weight: bold;
+        }
+
+        .review {
+            font-weight: bold;
+            color: #a15c00;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .inline-actions {
+            white-space: nowrap;
+        }
+
+        .document-list a {
+            display: inline-block;
+            margin: 4px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Contract Watch</h1>
+    <p>Vendor contracts, renewal deadlines, decisions, and reminder tracking</p>
+</header>
+
+<main>
+
+    <div class="notice">
+        The system checks active contracts against their renewal notice period.
+        It auto-flags contracts entering the notice window and checks active
+        contracts expiring within 30 days for reminder processing.
+    </div>
+
+    <section class="cards">
+        <div class="card">
+            Total contracts
+            <div class="metric" id="total">—</div>
+        </div>
+
+        <div class="card">
+            Active contracts
+            <div class="metric" id="active">—</div>
+        </div>
+
+        <div class="card">
+            Expiring in 30 days
+            <div class="metric" id="expiring">—</div>
+        </div>
+
+        <div class="card">
+            Renewal review
+            <div class="metric" id="reviewCount">—</div>
+        </div>
+    </section>
+
+    <h2>Vendor</h2>
+
+    <form id="vendorForm">
+        <div>
+            <label>Vendor name *</label>
+            <input id="newVendorName" required>
+        </div>
+
+        <div>
+            <label>Vendor email</label>
+            <input id="newVendorEmail" type="email">
+        </div>
+
+        <div>
+            <label>Vendor phone</label>
+            <input id="newVendorPhone">
+        </div>
+
+        <div>
+            <label>Notes</label>
+            <input id="newVendorNotes">
+        </div>
+
+        <div class="wide">
+            <button type="submit">Add Vendor</button>
+            <span class="hint">A vendor must exist before a contract can be created.</span>
+        </div>
+    </form>
+
+    <h2 id="formTitle">Add a contract</h2>
+
+    <form id="contractForm">
+        <input type="hidden" id="id">
+
+        <div>
+            <label>Vendor *</label>
+            <select id="vendorId" required>
+                <option value="">Select vendor</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Service / contract *</label>
+            <input id="serviceName" required>
+        </div>
+
+        <div>
+            <label>Contract start date *</label>
+            <input id="contractStartDate" type="date" required>
+        </div>
+
+        <div>
+            <label>Contract end date *</label>
+            <input id="endDate" type="date" required>
+        </div>
+
+        <div>
+            <label>Renewal notice period (days) *</label>
+            <input id="renewalNoticePeriodDays" type="number" min="0" max="3650" value="30" required>
+        </div>
+
+        <div>
+            <label>Contract reminder email</label>
+            <input id="contactEmail" type="email">
+        </div>
+
+        <div>
+            <label>Status</label>
+            <select id="status">
+                <option>ACTIVE</option>
+                <option>EXPIRED</option>
+                <option>TERMINATED</option>
+                <option>CANCELLED</option>
+            </select>
+        </div>
+
+        <div class="wide">
+            <label>Notes</label>
+            <textarea id="notes"></textarea>
+        </div>
+
+        <div class="wide">
+            <button type="submit">Save contract</button>
+            <button type="button" class="secondary" onclick="resetForm()">Clear</button>
+        </div>
+    </form>
+
+    <div id="decisionPanel" class="panel hidden">
+        <h2>Renewal Decision</h2>
+
+        <p id="decisionContractName" class="hint"></p>
+
+        <form id="decisionForm">
+            <div>
+                <label>Decision *</label>
+                <select id="decision" required>
+                    <option>RENEWED</option>
+                    <option>TERMINATED</option>
+                </select>
+            </div>
+
+            <div>
+                <label>New end date (required for RENEWED)</label>
+                <input id="newEndDate" type="date">
+            </div>
+
+            <div class="wide">
+                <label>Decision notes</label>
+                <textarea id="decisionNotes"></textarea>
+            </div>
+
+            <div class="wide">
+                <button type="submit">Save decision</button>
+                <button type="button" class="secondary" onclick="closeDecisionPanel()">Cancel</button>
+            </div>
+        </form>
+
+        <h3>Decision history</h3>
+        <div id="decisionHistory">No decision history.</div>
+    </div>
+
+    <div id="documentPanel" class="panel hidden">
+        <h2>Contract Document References</h2>
+        <p id="documentContractName" class="hint"></p>
+
+        <form id="documentForm">
+            <div>
+                <label>Document title *</label>
+                <input id="documentTitle" required>
+            </div>
+
+            <div>
+                <label>Reference URL *</label>
+                <input id="referenceUrl" type="url" required placeholder="https://...">
+            </div>
+
+            <div class="wide">
+                <label>Description</label>
+                <textarea id="documentDescription"></textarea>
+            </div>
+
+            <div class="wide">
+                <button type="submit">Add reference</button>
+                <button type="button" class="secondary" onclick="closeDocumentPanel()">Close</button>
+            </div>
+        </form>
+
+        <div id="documentList" class="document-list">
+            No document references.
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <h2>
+            Contracts
+            <button onclick="loadAll()" class="secondary">Refresh</button>
+            <button onclick="loadExpiring()" class="secondary">Show due within 30 days</button>
+            <button onclick="loadReviewContracts()" class="warning">Show renewal review</button>
+        </h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Vendor</th>
+                <th>Service</th>
+                <th>End date</th>
+                <th>Notice</th>
+                <th>Review flag</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+
+            <tbody id="rows">
+            <tr>
+                <td colspan="7">Loading…</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="hint">
+        Contract document references store links or references to existing files.
+        They do not upload files into this prototype.
+    </p>
+
+</main>
+
+<script>
+    const api = '/api/contracts';
+
+    let current = [];
+    let vendors = [];
+    let currentDecisionContractId = null;
+    let currentDocumentContractId = null;
+
+    async function request(url, options = {}) {
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            ...options
+        });
+
+        if (!response.ok) {
+            let message = 'Request failed: ' + response.status;
+
+            try {
+                const data = await response.json();
+                message = data.error || data.message || message;
+            } catch (error) {
+                // Keep the default message.
+            }
+
+            throw new Error(message);
+        }
+
+        if (response.status === 204) {
+            return null;
+        }
+
+        return response.json();
+    }
+
+    async function loadVendors() {
+        try {
+            vendors = await request('/api/vendors');
+
+            vendorId.innerHTML = '<option value="">Select vendor</option>';
+
+            vendors.forEach(vendor => {
+                vendorId.innerHTML += `
+                    <option value="${vendor.id}">
+                        ${esc(vendor.name)}
+                    </option>
+                `;
+            });
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    function getVendorName(vendorIdValue) {
+        const vendor = vendors.find(
+            item => Number(item.id) === Number(vendorIdValue)
+        );
+
+        return vendor ? vendor.name : 'Vendor #' + vendorIdValue;
+    }
+
+    async function loadDashboard() {
+        try {
+            const data = await request('/api/dashboard');
+
+            total.textContent = data.totalContracts;
+            active.textContent = data.activeContracts;
+            expiring.textContent = data.expiringIn30Days;
+            reviewCount.textContent = data.renewalReviewContracts;
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function loadAll() {
+        try {
+            current = await request(api);
+            render();
+            await loadDashboard();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function loadExpiring() {
+        try {
+            current = await request(api + '/expiring?days=30');
+            render();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function loadReviewContracts() {
+        try {
+            current = await request(api + '/renewal-review');
+            render();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    function render() {
+        rows.innerHTML = current.length
+            ? current.map(contract => `
+                <tr>
+                    <td>${esc(getVendorName(contract.vendorId))}</td>
+
+                    <td>${esc(contract.serviceName)}</td>
+
+                    <td>${contract.endDate || ''}</td>
+
+                    <td>${contract.renewalNoticePeriodDays} day(s)</td>
+
+                    <td class="review">
+                        ${contract.renewalReviewFlag ? 'REVIEW' : '—'}
+                    </td>
+
+                    <td class="status">
+                        ${esc(contract.status || '')}
+                    </td>
+
+                    <td class="inline-actions">
+                        <button onclick="editContract(${contract.id})">
+                            Edit
+                        </button>
+
+                        <button
+                            class="warning"
+                            onclick="openDecisionPanel(${contract.id})">
+                            Decision
+                        </button>
+
+                        <button
+                            onclick="openDocumentPanel(${contract.id})">
+                            Documents
+                        </button>
+
+                        <button
+                            class="danger"
+                            onclick="deleteContract(${contract.id})">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('')
+            : `
+                <tr>
+                    <td colspan="7">No contracts found.</td>
+                </tr>
+            `;
+    }
+
+    function esc(value) {
+        return String(value ?? '').replace(
+            /[&<>"']/g,
+            character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[character])
+        );
+    }
+
+    function resetForm() {
+        contractForm.reset();
+
+        id.value = '';
+        renewalNoticePeriodDays.value = 30;
+        status.value = 'ACTIVE';
+
+        formTitle.textContent = 'Add a contract';
+    }
+
+    async function editContract(contractId) {
+        try {
+            const contract = await request(api + '/' + contractId);
+
+            id.value = contract.id;
+            vendorId.value = contract.vendorId || '';
+            serviceName.value = contract.serviceName || '';
+            contractStartDate.value = contract.contractStartDate || '';
+            endDate.value = contract.endDate || '';
+            renewalNoticePeriodDays.value =
+                contract.renewalNoticePeriodDays ?? 30;
+            contactEmail.value = contract.contactEmail || '';
+            status.value = contract.status || 'ACTIVE';
+            notes.value = contract.notes || '';
+
+            formTitle.textContent = 'Edit contract';
+
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function deleteContract(contractId) {
+        if (!confirm('Delete this contract and its related history?')) {
+            return;
+        }
+
+        try {
+            await request(api + '/' + contractId, {
+                method: 'DELETE'
+            });
+
+            await loadAll();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    vendorForm.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const data = {
+            name: newVendorName.value,
+            contactEmail: newVendorEmail.value,
+            contactPhone: newVendorPhone.value,
+            notes: newVendorNotes.value
+        };
+
+        try {
+            await request('/api/vendors', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+
+            vendorForm.reset();
+
+            await loadVendors();
+
+            alert('Vendor saved');
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    contractForm.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const data = {
+            vendorId: Number(vendorId.value),
+            serviceName: serviceName.value,
+            contractStartDate: contractStartDate.value,
+            endDate: endDate.value,
+            renewalNoticePeriodDays:
+                Number(renewalNoticePeriodDays.value),
+            contactEmail: contactEmail.value,
+            status: status.value,
+            notes: notes.value
+        };
+
+        try {
+            const contractId = id.value;
+
+            await request(
+                contractId
+                    ? api + '/update/' + contractId
+                    : api + '/create',
+                {
+                    method: contractId ? 'PUT' : 'POST',
+                    body: JSON.stringify(data)
+                }
+            );
+
+            resetForm();
+
+            await loadVendors();
+            await loadAll();
+
+            alert('Contract saved');
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    async function openDecisionPanel(contractId) {
+        try {
+            const contract = await request(
+                api + '/' + contractId
+            );
+
+            currentDecisionContractId = contractId;
+
+            decisionContractName.textContent =
+                `${getVendorName(contract.vendorId)} — ${contract.serviceName}`;
+
+            decisionPanel.classList.remove('hidden');
+
+            decisionForm.reset();
+
+            decision.value = 'RENEWED';
+            decisionNotes.value = '';
+            newEndDate.value = '';
+
+            const history = await request(
+                '/api/renewal/' + contractId + '/decisions'
+            );
+
+            decisionHistory.innerHTML = history.length
+                ? history.map(item => `
+                    <p>
+                        <strong>${esc(item.decision)}</strong>
+                        on ${esc(item.decisionDate || '')}
+
+                        ${item.newEndDate
+                    ? ' → new end date: ' + esc(item.newEndDate)
+                    : ''}
+
+                        ${item.notes
+                    ? ' — ' + esc(item.notes)
+                    : ''}
+                    </p>
+                `).join('')
+                : 'No decision history.';
+
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    function closeDecisionPanel() {
+        currentDecisionContractId = null;
+        decisionPanel.classList.add('hidden');
+    }
+
+    decision.addEventListener('change', () => {
+        if (decision.value === 'RENEWED') {
+            newEndDate.required = true;
+        } else {
+            newEndDate.required = false;
+            newEndDate.value = '';
+        }
+    });
+
+    decisionForm.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        if (!currentDecisionContractId) {
+            return;
+        }
+
+        if (
+            decision.value === 'RENEWED' &&
+            !newEndDate.value
+        ) {
+            alert('Please select the new end date for RENEWED.');
+            return;
+        }
+
+        const data = {
+            decision: decision.value,
+            newEndDate: newEndDate.value || null,
+            notes: decisionNotes.value
+        };
+
+        try {
+            const saved = await request(
+                api + '/' + currentDecisionContractId +
+                '/renewal-decision',
+                {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                }
+            );
+
+            if (!saved) {
+                alert('Renewal decision could not be saved.');
+                return;
+            }
+
+            alert('Renewal decision saved');
+
+            closeDecisionPanel();
+
+            await loadAll();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    async function openDocumentPanel(contractId) {
+        try {
+            const contract = await request(
+                api + '/' + contractId
+            );
+
+            currentDocumentContractId = contractId;
+
+            documentContractName.textContent =
+                `${getVendorName(contract.vendorId)} — ${contract.serviceName}`;
+
+            documentPanel.classList.remove('hidden');
+
+            documentForm.reset();
+
+            await loadDocuments();
+
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function loadDocuments() {
+        if (!currentDocumentContractId) {
+            return;
+        }
+
+        const documents = await request(
+            '/api/contractdocument/' +
+            currentDocumentContractId
+        );
+
+        documentList.innerHTML = documents.length
+            ? documents.map(document => `
+                <div>
+                    <strong>
+                        ${esc(document.title)}
+                    </strong>
+
+                    <br>
+
+                    <a
+                        href="${esc(document.referenceUrl)}"
+                        target="_blank"
+                        rel="noopener">
+                        Open reference
+                    </a>
+
+                    ${
+                document.description
+                    ? '<div class="hint">' +
+                    esc(document.description) +
+                    '</div>'
+                    : ''
+            }
+
+                    <button
+                        class="danger"
+                        onclick="deleteDocument(${document.id})">
+                        Delete
+                    </button>
+                </div>
+            `).join('<hr>')
+            : 'No document references.';
+    }
+
+    function closeDocumentPanel() {
+        currentDocumentContractId = null;
+        documentPanel.classList.add('hidden');
+    }
+
+    documentForm.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        if (!currentDocumentContractId) {
+            return;
+        }
+
+        const data = {
+            title: documentTitle.value,
+            referenceUrl: referenceUrl.value,
+            description: documentDescription.value
+        };
+
+        try {
+            await request(
+                '/api/contractdocument/' +
+                currentDocumentContractId,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                }
+            );
+
+            documentForm.reset();
+
+            await loadDocuments();
+
+            alert('Document reference added');
+
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    async function deleteDocument(documentId) {
+        if (!confirm('Delete this document reference?')) {
+            return;
+        }
+
+        try {
+            await request(
+                '/api/contractdocument/delete/' +
+                documentId,
+                {
+                    method: 'DELETE'
+                }
+            );
+
+            await loadDocuments();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function initialize() {
+        await loadVendors();
+        await loadAll();
+    }
+
+    initialize();
+</script>
+
+</body>
+</html>
